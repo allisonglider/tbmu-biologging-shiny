@@ -1,4 +1,7 @@
+library(dplyr)
+library(ggplot2)
 library(shiny)
+theme_set(theme_linedraw())
 #devtools::install_github("allisonglider/seabiRds")
 
 world <- readRDS('world.RDS')
@@ -42,7 +45,7 @@ deployments <- readRDS('deployments.RDS')
 
 # -----
 
-map_track <- function(data, basemap, b = bath, colony_loc) {
+map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time) {
 
   colony_sf <- sf::st_as_sf(data.frame(lon = colony_loc[1], lat = colony_loc[2]),
                             coords = c('lon','lat'), crs = 4326)
@@ -62,27 +65,36 @@ map_track <- function(data, basemap, b = bath, colony_loc) {
       n = n(),
       do_union=FALSE) %>%
     sf::st_cast(to = 'LINESTRING')
+  
+  sub_tracks_sf <- locs_sf |> 
+    group_by(dep_id) |> 
+    dplyr::filter(time >= start_time, time <=end_time) |> 
+    summarize(
+      n = n(),
+      do_union=FALSE) |> 
+    sf::st_cast(to = 'LINESTRING')
 
   bb <- seabiRds::bbox_at_zoom(locs = locs_sf)
-
+  
   ggplot() +
     geom_contour_filled(data = b, aes(x = x, y = y, z = values),
                         breaks = seq(0, -1500, by = -200)) +
     geom_sf(data = basemap, fill = grey (0.9), size = 0.1) +
-    geom_sf(data = tracks_sf, col = 'yellow', size = 0.75) +
+    geom_sf(data = tracks_sf, col = 'yellow', size = 0.5, linetype = 2) +
+    geom_sf(data = sub_tracks_sf, col = 'yellow', size = 0.75) +
     geom_sf(data = colony_sf, col = 'black', size = 3) +
     coord_sf(xlim = bb[c(1,3)], ylim = bb[c(2,4)]) +
     scale_fill_viridis_d(na.value=grey(0.8), end = 0.4, direction = -1, drop = FALSE) +
     guides(fill = 'none') +
-    theme_light() +
+    labs(x = '', y = '') +
     theme(
       text = element_text(size = 14),
       axis.text.x = element_text(angle = 45, hjust = 1),
-      ) +
-    labs(x = '', y = '')
+      
+    )
 }
 
-plot_profile <- function(data) {
+plot_profile <- function(data, start_time, end_time) {
 
   data |>
     dplyr::mutate(
@@ -91,15 +103,18 @@ plot_profile <- function(data) {
     dplyr::select(dep_id, time, coldist, depth_m, 'speed') |>
     tidyr::pivot_longer(cols = c('coldist','depth_m', 'speed')) |>
     dplyr::mutate(name = factor(name, labels = c("Distance (km)", "Depth (m)", "Speed (km/hr)"))) |>
+    dplyr::filter(time >= start_time, time <=end_time) |> 
     ggplot(aes(x = time, y = value)) +
     geom_line() +
     scale_x_datetime(date_labels = '%b-%d %H:%M') +
     facet_grid(rows = vars(name), scales = 'free')  +
     labs(x = 'Time (UTC)', y = '') +
-    theme_light() +
     theme(
       text = element_text(size = 14),
       #axis.text.x = element_text(angle = 45, hjust = 1),
       strip.background = element_rect(fill = 'transparent'),
-      strip.text = element_text(color = 'black'))
+      strip.text = element_text(color = 'black'),
+      #panel.background = element_rect(fill = grey(0.8))
+    )
+  
 }
