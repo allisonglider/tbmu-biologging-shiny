@@ -7,41 +7,8 @@ theme_set(theme_linedraw())
 world <- readRDS('world.RDS')
 bath <- readRDS('bathymetry.RDS')
 
-# con <- DBI::dbConnect(RPostgres::Postgres(), 
-#                       host = config::get()$host_db, 
-#                       dbname = config::get()$db, 
-#                       port = config::get()$db_port, 
-#                       user = config::get()$db_user, 
-#                       password = config::get()$db_password)
-
-Sys.setenv('AWS_ACCESS_KEY_ID' = config::get()$aws_key,
-           'AWS_SECRET_ACCESS_KEY' = config::get()$aws_secret,
-           'AWS_DEFAULT_REGION' = config::get()$aws_region)
-
-gps <- arrow::open_dataset('s3://arcticecology-biologging/gps')
-tdr <- arrow::open_dataset('s3://arcticecology-biologging/tdr')
-# acc <- arrow::open_dataset('s3://arcticecology-biologging/acc')
-
-# deployments <- con |> 
-#   dplyr::tbl("deployments")  |> 
-#   dplyr::filter(
-#     site %in% c('Coats', 'CGM'), 
-#     species == 'TBMU',
-#     time_released > as.POSIXct('2022-01-01'), 
-#     time_recaptured < as.POSIXct('2023-01-01'),
-#     status_on %in% c('E', 'C'),
-#     !is.na(acc_id)
-#   ) |> 
-#   dplyr::select(species, metal_band, dep_id, site, nest, 
-#          dep_lon,dep_lat, time_released, time_recaptured, 
-#          status_on, status_off, mass_on, mass_off, gps_id)|> 
-#   dplyr::collect() |>  
-#   dplyr::mutate(
-#     year = as.numeric(strftime(time_released, '%Y')),
-#     status_on = ifelse(status_on == 'E', 'Incubation','Chick-rearing')
-#   ) 
-
 deployments <- readRDS('deployments.RDS')
+data <- readRDS('processed_data.RDS')
 
 # -----
 
@@ -90,7 +57,6 @@ map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time)
     theme(
       text = element_text(size = 14),
       axis.text.x = element_text(angle = 45, hjust = 1),
-      
     )
 }
 
@@ -100,9 +66,9 @@ plot_profile <- function(data, start_time, end_time) {
     dplyr::mutate(
       depth_m = depth_m * -1,
     ) |>
-    dplyr::select(dep_id, time, coldist, depth_m, 'speed') |>
-    tidyr::pivot_longer(cols = c('coldist','depth_m', 'speed')) |>
-    dplyr::mutate(name = factor(name, labels = c("Distance (km)", "Depth (m)", "Speed (km/hr)"))) |>
+    dplyr::select(dep_id, time, coldist, depth_m, wbf) |>
+    tidyr::pivot_longer(cols = c('coldist','depth_m', 'wbf')) |>
+    dplyr::mutate(name = factor(name, labels = c("Distance (km)", "Depth (m)", "Wing beat frequency (Hz)"))) |>
     dplyr::filter(time >= start_time, time <=end_time) |> 
     ggplot(aes(x = time, y = value)) +
     geom_line() +
@@ -111,10 +77,8 @@ plot_profile <- function(data, start_time, end_time) {
     labs(x = 'Time (UTC)', y = '') +
     theme(
       text = element_text(size = 14),
-      #axis.text.x = element_text(angle = 45, hjust = 1),
-      strip.background = element_rect(fill = 'transparent'),
-      strip.text = element_text(color = 'black'),
-      #panel.background = element_rect(fill = grey(0.8))
+      strip.background = element_rect(fill = grey(0.8)),
+      strip.text = element_text(color = 'black', size = 10)
     )
   
 }
