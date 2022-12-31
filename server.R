@@ -43,6 +43,9 @@ shinyServer(function(input, output, session) {
         select_data <- data |> 
           filter(dep_id == dd)
         
+        select_dives <- dives |> 
+          filter(dep_id == dd)
+        
         if (input$time[1] > max(select_data$time)) start_time <- min(select_data$time) else start_time <- input$time[1] 
         if (input$time[2] < min(select_data$time)) end_time <- max(select_data$time) else end_time <- input$time[2]
         
@@ -50,7 +53,7 @@ shinyServer(function(input, output, session) {
         if (nrow(select_data) > 10) {
           
           m <- map_track(data = select_data, basemap = world, colony_loc = c(dep_lon, dep_lat),
-                         start_time = input$time[1], end_time = input$time[2])
+                         start_time = start_time, end_time = end_time, dive_data = select_dives)
           
           p <- plot_profile(data = select_data, start_time = start_time, end_time = end_time)
           
