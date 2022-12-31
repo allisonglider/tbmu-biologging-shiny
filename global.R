@@ -78,7 +78,7 @@ plot_profile <- function(data, start_time, end_time) {
     theme(
       text = element_text(size = 14),
       strip.background = element_rect(fill = grey(0.8)),
-      strip.text = element_text(color = 'black', size = 10)
+      strip.text = element_text(color = 'black', size = 8),
     )
   
 }
