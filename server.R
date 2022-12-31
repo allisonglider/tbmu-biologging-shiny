@@ -24,11 +24,11 @@ shinyServer(function(input, output, session) {
       )
 
       sliderInput("time", "Select time range:", 
-                  value = c(lubridate::round_date(as.POSIXct(min(select_data$time) + 30, tz = 'UTC'), unit = '30 minutes'), 
-                            lubridate::round_date(as.POSIXct(max(select_data$time) - 30, tz = 'UTC'), unit = '30 minutes')), 
-                  min = lubridate::round_date(as.POSIXct(min(select_data$time), tz = 'UTC'), unit = '30 minutes'),
-                  max = lubridate::round_date(as.POSIXct(max(select_data$time), tz = 'UTC'), unit = '30 minutes'),
-                  step = 60*30,
+                  value = c(lubridate::round_date(as.POSIXct(min(select_data$time) + 15, tz = 'UTC'), unit = '15 minutes'), 
+                            lubridate::round_date(as.POSIXct(max(select_data$time) - 15, tz = 'UTC'), unit = '15 minutes')), 
+                  min = lubridate::round_date(as.POSIXct(min(select_data$time), tz = 'UTC'), unit = '15 minutes'),
+                  max = lubridate::round_date(as.POSIXct(max(select_data$time), tz = 'UTC'), unit = '15 minutes'),
+                  step = 60*15,
                   timeFormat = '%b-%d %H:%M', timezone = "+0000")
     })
     
