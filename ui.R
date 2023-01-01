@@ -39,13 +39,17 @@ shinyUI(fluidPage(
     
     mainPanel(
       
+      h6('Profile plots (top left) show distance from colony, dive activity, and wing beat frequency for a deployment within the selected time range.The map (top right) shows the foraging movements for the selected deployment (yellow line). 
+         The solid line corresponds to the time period selected with the time slider, and the dashed lines shows the complete track. Orange points indicate dive locations. 
+         The black point shows the location of the colony. Grey areas are land, blue shading indicates 200 m depth contours. Bar plot (bottom) shows time spent in different activities.'),
       fluidRow(
         plotOutput('map_track')
       ), 
-      h6('Profile plots (left) show distance from colony, dive activity, and wing beat frequency for a deployment within the selected time range.The map (right) shows the foraging movements for the selected deployment (yellow line). 
-         The solid line corresponds to the time period selected with the time slider, and the dashed lines shows the complete track. Orange points indicate dive locations. 
-         The black point shows the location of the colony. Grey areas are land, blue shading indicates 200 m depth contours.'),
-      
+      fluidRow(
+        column(8, align = 'centre',
+               plotOutput('plot_activity')
+        )
+      ),
     )
     
   )

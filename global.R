@@ -69,6 +69,8 @@ map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time,
 }
 
 plot_profile <- function(data, start_time, end_time) {
+  
+
 
   data |>
     dplyr::mutate(
@@ -88,5 +90,32 @@ plot_profile <- function(data, start_time, end_time) {
       strip.background = element_rect(fill = grey(0.8)),
       strip.text = element_text(color = 'black', size = 8),
     )
+  
+}
+
+
+timebudget_plot <- function(data = select_data, start_time = start_time, end_time = end_time) {
+  
+  dummy <- data.frame(
+    behaviour = c('Flying','Diving','Swimming', 'Colony'),
+    time = 1
+  )
+  
+  data |>
+    dplyr::filter(time >= start_time, time <=end_time) |> 
+    dplyr::group_by(behaviour) |> 
+    dplyr::summarize(
+      time = sum(!is.na(lon))/(6 * 60)
+    ) |> 
+    mutate(
+      behaviour = factor(behaviour, levels = c('Flying','Diving','Swimming', 'Colony'))
+    ) |> 
+    ggplot(aes(x = time, y = behaviour, fill = behaviour)) + 
+    geom_bar(stat = 'identity', ) +
+    geom_blank(data = dummy) +
+    scale_fill_brewer(palette = 'Dark2', drop = F) +
+    scale_y_discrete(drop = F) +
+    labs(x = 'Time (hrs)', y = 'Activity') +
+    guides(fill = 'none')
   
 }

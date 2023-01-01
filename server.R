@@ -57,9 +57,36 @@ shinyServer(function(input, output, session) {
           
           p <- plot_profile(data = select_data, start_time = start_time, end_time = end_time)
           
-          cowplot::plot_grid(p, m, nrow = 1)
+          cowplot::plot_grid(p, m, nrow = 1, ncol = 2)
         } else print('Retrieving data')
         
+      }
+    })
+    
+    output$plot_activity <- renderPlot({
+
+      if (!is.null(input$site) & !is.null(input$stage) & !is.null(input$deployment)) {
+
+        dd <- input$deployment
+        dep_lon <- deployments$dep_lon[deployments$dep_id == dd]
+        dep_lat <- deployments$dep_lat[deployments$dep_id == dd]
+
+        select_data <- data |>
+          filter(dep_id == dd)
+
+        select_dives <- dives |>
+          filter(dep_id == dd)
+
+        if (input$time[1] > max(select_data$time)) start_time <- min(select_data$time) else start_time <- input$time[1]
+        if (input$time[2] < min(select_data$time)) end_time <- max(select_data$time) else end_time <- input$time[2]
+
+        if (nrow(select_data) > 10) {
+
+          m <- timebudget_plot(data = select_data, start_time = start_time, end_time = end_time)
+
+          cowplot::plot_grid(p, m, nrow = 1)
+        } else print('Retrieving data')
+
       }
     })
     
