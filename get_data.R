@@ -4,6 +4,12 @@ data <- readRDS('D:/tbmu-mass-change/processed_data.RDS') |>
 
 data |> 
   dplyr::select(dep_id, time, lon, lat, depth_m, coldist, wbf) |> 
+  dplyr::mutate(
+    behaviour = ifelse(depth_m > 3, 'Diving',
+                       ifelse(wbf > 6, 'Flying', 
+                              ifelse(coldist < 0.5, 'Colony',
+                                     'Swimming')))
+  ) |> 
   dplyr::slice(seq(1, dplyr::n(), 10)) |> 
   saveRDS('processed_data.RDS')
 
