@@ -7,17 +7,21 @@ theme_set(theme_linedraw())
 world <- readRDS('world.RDS')
 bath <- readRDS('bathymetry.RDS')
 
-deployments <- readRDS('deployments.RDS')
 data <- readRDS('processed_data.RDS')
+dives <- readRDS('dive_data.RDS')
+deployments <- readRDS('deployments.RDS') |> 
+  dplyr::filter(dep_id %in% unique(data$dep_id))
+
 
 # -----
 
-map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time) {
+map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time, dive_data) {
 
   colony_sf <- sf::st_as_sf(data.frame(lon = colony_loc[1], lat = colony_loc[2]),
                             coords = c('lon','lat'), crs = 4326)
 
   locs_sf <- sf::st_as_sf(data, coords = c('lon','lat'), crs = 4326)
+  
   crop_bath <- seabiRds::bbox_at_zoom(locs_sf, zoom_level = 6)
   b <- raster::crop(b, raster::extent(crop_bath[1], crop_bath[3], crop_bath[2], crop_bath[4]))
 
@@ -40,7 +44,10 @@ map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time)
       n = n(),
       do_union=FALSE) |> 
     sf::st_cast(to = 'LINESTRING')
-
+  
+  dives_sf <- sf::st_as_sf(dive_data, coords = c('lon','lat'), crs = 4326) |> 
+    dplyr::filter(time >= start_time, time <=end_time)
+  
   bb <- seabiRds::bbox_at_zoom(locs = locs_sf)
   
   ggplot() +
@@ -50,6 +57,7 @@ map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time)
     geom_sf(data = tracks_sf, col = 'yellow', size = 0.5, linetype = 2) +
     geom_sf(data = sub_tracks_sf, col = 'yellow', size = 0.75) +
     geom_sf(data = colony_sf, col = 'black', size = 3) +
+    geom_sf(data = dives_sf, col = 'dark orange', size = 2) +
     coord_sf(xlim = bb[c(1,3)], ylim = bb[c(2,4)]) +
     scale_fill_viridis_d(na.value=grey(0.8), end = 0.4, direction = -1, drop = FALSE) +
     guides(fill = 'none') +
@@ -78,7 +86,7 @@ plot_profile <- function(data, start_time, end_time) {
     theme(
       text = element_text(size = 14),
       strip.background = element_rect(fill = grey(0.8)),
-      strip.text = element_text(color = 'black', size = 10)
+      strip.text = element_text(color = 'black', size = 8),
     )
   
 }
