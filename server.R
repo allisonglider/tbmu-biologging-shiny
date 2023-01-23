@@ -83,8 +83,10 @@ shinyServer(function(input, output, session) {
         if (nrow(select_data) > 10) {
 
           m <- timebudget_plot(data = select_data, start_time = start_time, end_time = end_time)
+          
+          d <- wbf_plot(data = select_data, start_time = start_time, end_time = end_time)
 
-          cowplot::plot_grid(p, m, nrow = 1)
+          cowplot::plot_grid(m, d, nrow = 1)
         } else print('Retrieving data')
 
       }

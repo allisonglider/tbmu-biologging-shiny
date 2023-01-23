@@ -70,8 +70,6 @@ map_track <- function(data, basemap, b = bath, colony_loc, start_time, end_time,
 
 plot_profile <- function(data, start_time, end_time) {
   
-
-
   data |>
     dplyr::mutate(
       depth_m = depth_m * -1,
@@ -88,7 +86,7 @@ plot_profile <- function(data, start_time, end_time) {
     theme(
       text = element_text(size = 14),
       strip.background = element_rect(fill = grey(0.8)),
-      strip.text = element_text(color = 'black', size = 8),
+      strip.text = element_text(color = 'black', size = 9),
     )
   
 }
@@ -117,5 +115,48 @@ timebudget_plot <- function(data = select_data, start_time = start_time, end_tim
     scale_y_discrete(drop = F) +
     labs(x = 'Time (hrs)', y = 'Activity') +
     guides(fill = 'none')
+  
+}
+
+divedepth_plot <- function(data = select_data, start_time = start_time, end_time = end_time) {
+  
+  data |>
+    dplyr::filter(time >= start_time, time <=end_time, behaviour == 'Diving') |> 
+    dplyr::mutate(
+      depth_class = (floor(depth_m/10) * 10) + 5
+    ) |> 
+    dplyr::group_by(depth_class) |> 
+    dplyr::summarize(
+      time = sum(!is.na(lon))/(6*60)
+    ) |> 
+    ggplot(aes(y = time, x = depth_class)) +
+    geom_bar(stat = 'identity', width = 10) +
+    scale_x_reverse(lim = c(110, 0), breaks = seq(100,0, -20)) +
+    coord_flip() +
+    labs(x = 'Depth (m)', y = 'Time (hrs)')
+  
+}
+
+
+wbf_plot <- function(data = select_data, start_time = start_time, end_time = end_time) {
+  
+  wbf <- data |> 
+    dplyr::filter(time >= start_time, time <=end_time) |> 
+    mutate(
+      time = lubridate::round_date(time, unit = '3 min'),
+    ) |> 
+    group_by(dep_id, time) |> 
+    summarize(
+      coldist = median(coldist, na.rm = T),
+      n_fly = sum(behaviour == 'Flying'),
+      wbf = median(wbf[behaviour == 'Flying' & coldist > 2], na.rm = T),
+      wbf = ifelse(n_fly < 6, NA, wbf)
+    )
+  
+  ggplot(wbf, aes(x = time, y = coldist)) +
+    geom_line(linetype = 2) +
+    geom_point(data = wbf[!is.na(wbf$wbf),],aes(col = wbf), size = 3) +
+    scale_colour_viridis_c(option = 'B', end = 0.9) +
+    labs(x = 'Time (hrs)', y = 'Distance from colony (km)', colour = 'Wing beat\n frequency (Hz)')
   
 }

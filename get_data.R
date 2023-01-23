@@ -6,7 +6,7 @@ data |>
   dplyr::select(dep_id, time, lon, lat, depth_m, coldist, wbf) |> 
   dplyr::mutate(
     behaviour = ifelse(depth_m > 3, 'Diving',
-                       ifelse(wbf > 6, 'Flying', 
+                       ifelse(wbf > 6.5 & wbf < 9.5, 'Flying', 
                               ifelse(coldist < 0.5, 'Colony',
                                      'Swimming')))
   ) |> 
@@ -48,3 +48,4 @@ dives |>
     max_depth = max(depth_m)
   )|> 
   saveRDS('dive_data.RDS')
+
